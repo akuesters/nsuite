@@ -1,6 +1,6 @@
 ### environment ###
 
-# set up environment for building on the multicore part of daint
+# set up environment for building on the multicore part of juwels
 
 module load CMake/3.13.0
 
