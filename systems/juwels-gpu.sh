@@ -1,14 +1,15 @@
 ### environment ###
 
 # set up environment for building on the multicore part of juwels
-module use /gpfs/software/juwels/otherstages/
-module load Stages/Devel-2018b
-
-module load CMake/3.13.0
+#module use /gpfs/software/juwels/otherstages/
+#module load Stages/Devel-2018b
 
 module load GCC/7.3.0 
 module load CUDA/9.2.88 
 module load MVAPICH2/2.3-GDR
+
+#module load CMake/3.12.3
+module load CMake/3.13.0
 
 module load Python/3.6.6
 ns_python=$(which python3)
