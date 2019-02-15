@@ -1,6 +1,6 @@
 ### environment ###
 
-# set up environment for building on the multicore part of juwels
+# set up environment for building on the gpu part of juwels
 
 module load CMake/3.13.0
 
@@ -11,7 +11,7 @@ module load MVAPICH2/2.3-GDR
 module load Python/3.6.6
 ns_python=$(which python3)
 
-# mpi4py only needed for NEURON, CUDA only works with gcc7 (would require Intel compiler and Cuda-unaware MPI version)
+# mpi4py only needed for NEURON, CUDA only works with gcc7 (mpi4py would require Intel compiler and Cuda-unaware MPI version)
 #module load mpi4py/3.0.0-Python-3.6.6
 ### compilation options ###
 
