@@ -7,9 +7,12 @@ module load CMake/3.13.0
 module load Python/3.6.6
 ns_python=$(which python3)
 
-# load before mpi4py (only NEURON) because required
 module load GCC/8.2.0 ParaStationMPI/5.2.1-1
-#module load mpi4py/3.0.0-Python-3.6.6
+
+# for (core)neuron
+module load mpi4py/3.0.0-Python-3.6.6
+module load flex/2.6.4
+module load Bison/.3.1
 
 ### compilation options ###
 
