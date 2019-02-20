@@ -10,16 +10,19 @@ model=ring
 dryrun=true
 tag=default
 ranks_per_node=2
-execpath=??
+execpath=/p/project/cslns/exascale/nsuite/benchmarks/engines/busyring/arbor
+partition=osws_tue_pm_large
+cpus_per_task=48
 ###########################
 
 append() {
-    local -n var=$1; shift
-    local val=$1
-
-    $var[${#var[@]}]=$val
+    eval "$1[\${#$1[@]}]=\$2"
+    #if [ -n $1 ]; then
+    #    local var=$1; shift
+    #fi
+    #local val=$1
+    #var[${#var[@]}]=$val
 }
-
 
 build-sets() {
     nodes_sets=()
@@ -27,7 +30,7 @@ build-sets() {
     local nodes=$nodes_min
     while (( nodes <= nodes_max )); do
         append nodes_sets $nodes
-        nodes=$((nodes*nodes_scaling))
+        nodes=$(( nodes * nodes_scaling ))
     done
 }
 
@@ -36,7 +39,7 @@ eval-cmdline() {
         eval $1
         shift
     done
-  output_path="$(pwd)/batch-benchmarks/$tag/$model/$config/$dryrun"
+    output_path="$(pwd)/batch-benchmarks/$tag/$model/$config/$dryrun"
     mkdir -p $output_path
 }
 
@@ -49,6 +52,8 @@ do-sed() {
         -e "s/@RUNPATH@/$runpath/og" \
         -e "s/@INPUT@/$input/og" \
         -e "s/@EXECPATH@/$execpath/og" \
+        -e "s/@PARTITION@/$partition/og" \
+        -e "s/@CPUSPERTASK@/$cpus_per_task/og" \
         <"$1" >"$2"
 }
 
@@ -67,9 +72,9 @@ build-job() {
 
     do-sed $input.json.in "$runpath"/$input.json
     do-sed $input.sh.in "$runpath"/$input.sh
-    
+
     # use sed to set number of cells in an input file
-    srun -n $ranks -c 40 <run> input.json > run_$cellspernode_$nodes
+#    srun -n $ranks -c 40 <run> input.json > run_$cellspernode_$nodes
 }
 
 run-job() {

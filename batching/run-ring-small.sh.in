@@ -1,3 +1,9 @@
-# SBATCH headers
+#!/bin/bash -x
+#SBATCH --account=slns
+#SBATCH --partition=@PARTITION@
+#SBATCH --nodes=@NODES@
+#SBATCH --cpus-per-task=@CPUSPERTASK@
+#SBATCH --output=mpi-out.%j
+#SBATCH --error=mpi-err.%j
 
-srun -n @RANKS@ @EXECPATH@ "@RUNPATH@/@INPUT@.json" >"@RUNPATH@"/run.out
+ARB_NUM_THREADS=@CPUSPERTASK@ srun -n @RANKS@ ./@EXECPATH@/run "@RUNPATH@/@INPUT@.json" >"@RUNPATH@"/run.out
