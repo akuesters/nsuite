@@ -1,9 +1,9 @@
 #!/bin/bash -x
 #SBATCH --account=slns
 #SBATCH --partition=@PARTITION@
-#SBATCH --nodes=@NODES@
-#SBATCH --cpus-per-task=@CPUSPERTASK@
+#SBATCH --nodes=@REALNODES@
+#SBATCH --ntasks=@REALRANKS@
 #SBATCH --output=mpi-out.%j
 #SBATCH --error=mpi-err.%j
 
-ARB_NUM_THREADS=@CPUSPERTASK@ srun -n @RANKS@ ./@EXECPATH@/run "@RUNPATH@/@INPUT@.json" >"@RUNPATH@"/run.out
+ARB_NUM_THREADS=@CPUSPERTASK@ srun "@EXECPATH@"/run "@RUNPATH@/@INPUT@.json" >"@RUNPATH@"/run.out

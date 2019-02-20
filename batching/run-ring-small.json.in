@@ -1,7 +1,7 @@
 {
     "name": "@NAME@",
     "num-cells": @CELLS@,
-    "num-ranks": @NODES@,
+    "num-ranks": @RANKS@,
     "dryrun": @DRYRUN@
     "synapses": 1,
     "min-delay": 5,
