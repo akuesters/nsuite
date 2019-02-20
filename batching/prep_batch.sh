@@ -2,7 +2,21 @@
 
 #set -x -v
 
+##################################################
+# ./pre_batch.sh build|run|table [param1=val1]*
+##################################################
+
+######### Mode
+# build | run | table
+# flags for building or running jobs: choices (:/false)
+mode=
+
+# build:
+# clean up before running
+clean=false
+
 ########################### Params
+
 cells_per_rank_sets=(1000 10000)
 nodes_min=1
 nodes_max=2048
@@ -21,10 +35,6 @@ toppath=$(readlink -f "$(pwd)"/..)
 execpath="$toppath"/benchmarks/engines/busyring/arbor
 partition=osws_wed_am_large
 
-# flags for building or running jobs: choices (:/false)
-build_jobs=:
-run_jobs=:
-clean=false
 ###########################
 
 append() {
@@ -46,15 +56,29 @@ build-sets() {
     done
 }
 
+cmdline/build() {
+    $clean && rm -rf $output_path
+    mkdir -p $output_path
+}
+
+cmdline/run() {
+    :
+}
+
+cmdline/table() {
+    :
+}
+
 eval-cmdline() {
+    mode=$1; shift
     while (($# > 0)); do
         eval $1
         shift
     done
     
     output_path="$toppath"/batching/batch-benchmarks/$tag/$model/$config/$dryrun
-    $clean && rm -rf $output_path
-    mkdir -p $output_path
+    
+    cmdline/$mode # setup for mode
 }
 
 do-sed() {
@@ -77,7 +101,7 @@ do-sed() {
         <"$1" >"$2"
 }
 
-build-job() {
+job/build() {
     local cells_per_ranks=$1; shift
     local nodes=$1; shift
     mkdir -p "$runpath"
@@ -98,14 +122,21 @@ build-job() {
     echo "Building $runpath"
     do-sed $input.json.in "$runpath"/$input.json
     do-sed $input.sh.in "$runpath"/$input.sh
-
-    # use sed to set number of cells in an input file
-#    srun -n $ranks -c 40 <run> input.json > run_$cellspernode_$nodes
 }
 
-run-job() {
+job/run() {
+    local cells_per_ranks=$1; shift
+    local nodes=$1; shift
+
     echo "Batching $runpath"
     sbatch "$runpath"/$input.sh
+}
+
+job/table() {
+    local cells_per_ranks=$1; shift
+    local nodes=$1; shift
+
+    table_line "$runpath"/run.out >>"$output_path/table.txt"
 }
 
 over-nodes() {
@@ -120,8 +151,7 @@ over-nodes() {
         local runpath="$cell_output_path/ranks-$ranks"
         local input="run-$model-$config"
 
-        $build_jobs && build-job $cells_per_rank $nodes
-        $run_jobs && run-job
+        job/$mode $cells_per_rank $nodes
     done
 }
 
@@ -131,6 +161,50 @@ over-cells() {
     do
         over-nodes $cells_per_rank
     done
+}
+
+##### processing output ######
+table_line() {
+    local fid="$1"; shift
+    
+    if [ ! -f "$fid" ]; then
+        echo "ERROR: the benchmark output file \"$fid\" does not exist."
+    else
+        printf "%7d%7d%7d%7d" $tag $model $config $dryrun
+        
+        cells="$2"
+        ranks="$3"
+
+        printf "%7d%7d" $cells $ranks   
+
+        tts=`awk '/^model-run/ {print $2}' $fid`
+        ncell=`awk '/^cell stats/ {print $3}' $fid`
+        ncomp=`awk '/^cell stats/ {print $7}' $fid`
+        cell_rate=`echo "$ncell/$tts" | bc -l`
+
+        printf "%7d%12d%12.3f%12.1f" $ncell $ncomp $tts $cell_rate
+
+        mempos=`awk '/^meter / {j=-1; for(i=1; i<=NF; ++i) if($i =="memory(MB)") j=i; print j}' $fid`
+        nranks=`awk '/^ranks:/ {print $2}' $fid`
+        if [ "$mempos" != "-1" ]
+        then
+            rankmem=$(awk "/^meter-total/ {print \$$mempos}" $fid)
+            totalmem=`echo $rankmem*$nranks | bc -l`
+            cellmem=`echo $totalmem/$ncell | bc -l`
+            printf "%12.3f%12.3f" $totalmem $cellmem
+        else
+            printf "%12s%12s" '-' '-'
+        fi
+
+        printf "\n"
+    fi
+}
+
+table() {
+    echo "  tag model config dryrun cells ranks cells compartments    wall(s)  throughput  mem-tot(MB) mem-percell(MB)"
+# over_cells
+# over_nodes   
+#    table_line $ofile $cells $ranks
 }
 
 eval-cmdline "$@"
