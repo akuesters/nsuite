@@ -5,7 +5,7 @@
 ########################### Params
 cells_per_rank_sets=(1000 10000)
 nodes_min=1
-nodes_max=1024
+nodes_max=2048
 nodes_scaling=2
 
 config=small
@@ -15,6 +15,7 @@ tag=default
 
 ranks_per_node=2
 cpus_per_task=24
+timelimit=2:30:00
 
 toppath=$(readlink -f "$(pwd)"/..)
 execpath="$toppath"/benchmarks/engines/busyring/arbor
@@ -59,6 +60,7 @@ eval-cmdline() {
 do-sed() {
     echo "Processing $1"
     sed -r \
+        -e "s+@TIMELIMIT@+$timelimit+g" \
         -e "s+@TOPPATH@+$toppath+g" \
         -e "s+@REALRANKS@+$real_ranks+g" \
         -e "s+@REALNODES@+$real_nodes+g" \
