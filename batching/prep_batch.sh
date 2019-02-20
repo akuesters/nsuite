@@ -126,6 +126,12 @@ job/run() {
 }
 
 job/table() {
+    local first_line_ranks=$(( ranks_per_node * nodes_min ))
+    local first_line_cells=$(( ranks_per_node * cells_per_rank_sets[0] ))
+    if [[ $cells == $first_line_cells && $ranks == $first_line_ranks ]]; then
+        echo "tag        model    config    dryrun    cells    ranks    cells    compartments    wall(s)   throughput    mem-tot(MB)    mem-percell(MB)" >> "$output_path/table.txt"
+    fi
+
     table_line "$runpath"/run.out $cells $ranks \
                >>"$output_path/table.txt"
 }
@@ -163,14 +169,14 @@ table_line() {
         echo "ERROR: the benchmark output file \"$fid\" does not exist."
     else
         printf "$tag $model $config $dryrun"
-        printf "%7d %7d" $cells $ranks   
+        printf "%14d %7d" $cells $ranks   
 
         local tts=`awk '/^model-run/ {print $2}' $fid`
         local ncell=`awk '/^cell stats/ {print $3}' $fid`
         local ncomp=`awk '/^cell stats/ {print $7}' $fid`
         local cell_rate=`echo "$ncell/$tts" | bc -l`
 
-        printf "%7d %12d %12.3f %12.1f" $ncell $ncomp $tts $cell_rate
+        printf "%14d %12d %12.3f %12.1f" $ncell $ncomp $tts $cell_rate
 
         local mempos=`awk '/^meter / {j=-1; for(i=1; i<=NF; ++i) if($i =="memory(MB)") j=i; print j}' $fid`
         nranks=`awk '/^ranks:/ {print $2}' $fid`
@@ -186,13 +192,6 @@ table_line() {
 
         printf "\n"
     fi
-}
-
-table() {
-    echo "  tag model config dryrun cells ranks cells compartments    wall(s)  throughput  mem-tot(MB) mem-percell(MB)"
-# over_cells
-# over_nodes   
-#    table_line $ofile $cells $ranks
 }
 
 eval-cmdline "$@"
