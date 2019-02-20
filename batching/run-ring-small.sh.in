@@ -1,9 +1,11 @@
 #!/bin/bash -x
 #SBATCH --account=slns
-#SBATCH --partition=@PARTITION@
+#SBATCH --reservation=@PARTITION@
 #SBATCH --nodes=@REALNODES@
 #SBATCH --ntasks=@REALRANKS@
-#SBATCH --output=mpi-out.%j
-#SBATCH --error=mpi-err.%j
+#SBATCH --output="@RUNPATH@"/mpi-out.%j
+#SBATCH --error="@RUNPATH@"/mpi-err.%j
+
+source "@TOPPATH@"/systems/juwels-mc.sh
 
 ARB_NUM_THREADS=@CPUSPERTASK@ srun "@EXECPATH@"/run "@RUNPATH@/@INPUT@.json" >"@RUNPATH@"/run.out

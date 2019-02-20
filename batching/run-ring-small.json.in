@@ -2,8 +2,8 @@
     "name": "@NAME@",
     "num-cells": @CELLS@,
     "num-ranks": @RANKS@,
-    "dryrun": @DRYRUN@
-    "synapses": 1,
+    "dryrun": @DRYRUN@,
+    "synapses": 10000,
     "min-delay": 5,
     "duration": 200,
     "ring-size": 10,

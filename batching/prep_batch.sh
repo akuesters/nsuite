@@ -7,14 +7,23 @@ cells_per_rank_sets=(1000 10000)
 nodes_min=1
 nodes_max=1024
 nodes_scaling=2
+
 config=small
 model=ring
 dryrun=true
 tag=default
+
 ranks_per_node=2
-execpath=$(readlink -f "$(pwd)/../benchmarks/engines/busyring/arbor")
-partition=osws_wed_am_large
 cpus_per_task=24
+
+toppath=$(readlink -f "$(pwd)"/..)
+execpath="$toppath"/benchmarks/engines/busyring/arbor
+partition=osws_wed_am_large
+
+# flags for building or running jobs: choices (:/false)
+build_jobs=:
+run_jobs=:
+clean=false
 ###########################
 
 append() {
@@ -41,13 +50,16 @@ eval-cmdline() {
         eval $1
         shift
     done
-    output_path=$(readlink -f "$(pwd)")/batch-benchmarks/$tag/$model/$config/$dryrun
+    
+    output_path="$toppath"/batching/batch-benchmarks/$tag/$model/$config/$dryrun
+    $clean && rm -rf $output_path
     mkdir -p $output_path
 }
 
 do-sed() {
-    echo "Building $2 from $1"
+    echo "Processing $1"
     sed -r \
+        -e "s+@TOPPATH@+$toppath+g" \
         -e "s+@REALRANKS@+$real_ranks+g" \
         -e "s+@REALNODES@+$real_nodes+g" \
         -e "s+@CELLS@+$cells+g" \
@@ -66,8 +78,8 @@ do-sed() {
 build-job() {
     local cells_per_ranks=$1; shift
     local nodes=$1; shift
+    mkdir -p "$runpath"
 
-    local ranks=$(( ranks_per_node * nodes ))
     local cells=$(( cells_per_ranks * ranks ))
 
     if [[ $dryrun == true ]]; then
@@ -78,12 +90,10 @@ build-job() {
         local real_nodes=$nodes
     fi
 
-    local input="run-$model-$config"
-    local runpath="$cell_output_path/ranks-$ranks"
-    mkdir -p "$runpath"
 
     local name="run-$tag-$model-$config-$dryrun"
 
+    echo "Building $runpath"
     do-sed $input.json.in "$runpath"/$input.json
     do-sed $input.sh.in "$runpath"/$input.sh
 
@@ -92,10 +102,7 @@ build-job() {
 }
 
 run-job() {
-    local nodes=$1; shift
-    local ranks=$(( ranks_per_node * nodes ))
-    local runpath="$cell_output_path/ranks-$ranks"
-
+    echo "Batching $runpath"
     sbatch "$runpath"/$input.sh
 }
 
@@ -107,7 +114,12 @@ over-nodes() {
     local nodes
     for nodes in ${nodes_sets[@]}
     do
-        build-job $cells_per_rank $nodes
+        local ranks=$(( ranks_per_node * nodes ))
+        local runpath="$cell_output_path/ranks-$ranks"
+        local input="run-$model-$config"
+
+        $build_jobs && build-job $cells_per_rank $nodes
+        $run_jobs && run-job
     done
 }
 
