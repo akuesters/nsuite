@@ -3,7 +3,7 @@
 #set -x -v
 
 ##################################################
-# ./pre_batch.sh build|run|table [param1=val1]*
+# ./prep_batch.sh build|run|table [param1=val1]*
 ##################################################
 
 ######### Mode
@@ -33,7 +33,7 @@ timelimit=2:30:00
 
 toppath=$(readlink -f "$(pwd)"/..)
 execpath="$toppath"/benchmarks/engines/busyring/arbor
-partition=osws_wed_am_large
+reservation=osws_wed_pm_large
 
 ###########################
 
@@ -95,7 +95,7 @@ do-sed() {
         -e "s+@RUNPATH@+$runpath+g" \
         -e "s+@INPUT@+$input+g" \
         -e "s+@EXECPATH@+$execpath+g" \
-        -e "s+@PARTITION@+$partition+g" \
+        -e "s+@RESERVATION@+$reservation+g" \
         -e "s+@CPUSPERTASK@+$cpus_per_task+g" \
         -e "s+@RANKS@+$ranks+g" \
         <"$1" >"$2"
@@ -162,16 +162,15 @@ table_line() {
     if [ ! -f "$fid" ]; then
         echo "ERROR: the benchmark output file \"$fid\" does not exist."
     else
-        printf "%7d%7d%7d%7d" $tag $model $config $dryrun
-        
-        printf "%7d%7d" $cells $ranks   
+        printf "$tag $model $config $dryrun"
+        printf "%7d %7d" $cells $ranks   
 
         local tts=`awk '/^model-run/ {print $2}' $fid`
         local ncell=`awk '/^cell stats/ {print $3}' $fid`
         local ncomp=`awk '/^cell stats/ {print $7}' $fid`
         local cell_rate=`echo "$ncell/$tts" | bc -l`
 
-        printf "%7d%12d%12.3f%12.1f" $ncell $ncomp $tts $cell_rate
+        printf "%7d %12d %12.3f %12.1f" $ncell $ncomp $tts $cell_rate
 
         local mempos=`awk '/^meter / {j=-1; for(i=1; i<=NF; ++i) if($i =="memory(MB)") j=i; print j}' $fid`
         nranks=`awk '/^ranks:/ {print $2}' $fid`

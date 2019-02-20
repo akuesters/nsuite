@@ -1,7 +1,7 @@
 #!/bin/bash -x
 #SBATCH --account=slns
 #SBATCH --time=@TIMELIMIT@
-#SBATCH --reservation=@PARTITION@
+#SBATCH --reservation=@RESERVATION@
 #SBATCH --nodes=@REALNODES@
 #SBATCH --ntasks=@REALRANKS@
 #SBATCH --output="@RUNPATH@"/mpi-out.%j
