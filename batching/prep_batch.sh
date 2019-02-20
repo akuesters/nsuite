@@ -102,11 +102,7 @@ do-sed() {
 }
 
 job/build() {
-    local cells_per_ranks=$1; shift
-    local nodes=$1; shift
     mkdir -p "$runpath"
-
-    local cells=$(( cells_per_ranks * ranks ))
 
     if [[ $dryrun == true ]]; then
         local real_ranks=1
@@ -125,18 +121,13 @@ job/build() {
 }
 
 job/run() {
-    local cells_per_ranks=$1; shift
-    local nodes=$1; shift
-
     echo "Batching $runpath"
     sbatch "$runpath"/$input.sh
 }
 
 job/table() {
-    local cells_per_ranks=$1; shift
-    local nodes=$1; shift
-
-    table_line "$runpath"/run.out >>"$output_path/table.txt"
+    table_line "$runpath"/run.out $cells $ranks \
+               >>"$output_path/table.txt"
 }
 
 over-nodes() {
@@ -147,11 +138,12 @@ over-nodes() {
     local nodes
     for nodes in ${nodes_sets[@]}
     do
-        local ranks=$(( ranks_per_node * nodes ))
+        local ranks=$(( ranks_per_node  * nodes ))
+        local cells=$(( cells_per_ranks * ranks ))
         local runpath="$cell_output_path/ranks-$ranks"
         local input="run-$model-$config"
 
-        job/$mode $cells_per_rank $nodes
+        job/$mode
     done
 }
 
@@ -172,25 +164,22 @@ table_line() {
     else
         printf "%7d%7d%7d%7d" $tag $model $config $dryrun
         
-        cells="$2"
-        ranks="$3"
-
         printf "%7d%7d" $cells $ranks   
 
-        tts=`awk '/^model-run/ {print $2}' $fid`
-        ncell=`awk '/^cell stats/ {print $3}' $fid`
-        ncomp=`awk '/^cell stats/ {print $7}' $fid`
-        cell_rate=`echo "$ncell/$tts" | bc -l`
+        local tts=`awk '/^model-run/ {print $2}' $fid`
+        local ncell=`awk '/^cell stats/ {print $3}' $fid`
+        local ncomp=`awk '/^cell stats/ {print $7}' $fid`
+        local cell_rate=`echo "$ncell/$tts" | bc -l`
 
         printf "%7d%12d%12.3f%12.1f" $ncell $ncomp $tts $cell_rate
 
-        mempos=`awk '/^meter / {j=-1; for(i=1; i<=NF; ++i) if($i =="memory(MB)") j=i; print j}' $fid`
+        local mempos=`awk '/^meter / {j=-1; for(i=1; i<=NF; ++i) if($i =="memory(MB)") j=i; print j}' $fid`
         nranks=`awk '/^ranks:/ {print $2}' $fid`
         if [ "$mempos" != "-1" ]
         then
-            rankmem=$(awk "/^meter-total/ {print \$$mempos}" $fid)
-            totalmem=`echo $rankmem*$nranks | bc -l`
-            cellmem=`echo $totalmem/$ncell | bc -l`
+            local rankmem=$(awk "/^meter-total/ {print \$$mempos}" $fid)
+            local totalmem=`echo $rankmem*$nranks | bc -l`
+            local cellmem=`echo $totalmem/$ncell | bc -l`
             printf "%12.3f%12.3f" $totalmem $cellmem
         else
             printf "%12s%12s" '-' '-'
