@@ -129,7 +129,7 @@ job/table() {
     local first_line_ranks=$(( ranks_per_node * nodes_min ))
     local first_line_cells=$(( ranks_per_node * cells_per_rank_sets[0] ))
     if [[ $cells == $first_line_cells && $ranks == $first_line_ranks ]]; then
-        echo "tag        model    config    dryrun    cells    ranks    cells    compartments    wall(s)   throughput    mem-tot(MB)    mem-percell(MB)" >> "$output_path/table.txt"
+        echo "tag        model    config    dryrun    cells    ranks    cells    compartments    wall(s)   throughput    mem-tot(MB)    mem-percell(MB)    comm_exch_gather(s)    walkspikes(s)" >> "$output_path/table.txt"
     fi
 
     table_line "$runpath"/run.out $cells $ranks \
@@ -189,6 +189,11 @@ table_line() {
         else
             printf "%12s%12s" '-' '-'
         fi
+
+        local comm_exch_gather=`awk '/gather/ {print $4}' $fid`
+        local walkspikes=`awk '/walkspikes/ {print $4}' $fid`
+
+        printf "%12.3f %12.3f" $comm_exch_gather $walkspikes
 
         printf "\n"
     fi
