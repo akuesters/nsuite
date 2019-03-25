@@ -2,18 +2,19 @@
 # Variables defined here use the prefix ns_
 set_working_paths() {
     if [ -z "$ns_prefix" ]; then
-	echo "error: empty ns_prefix"
-	exit 1
+        echo "error: empty ns_prefix"
+        exit 1
     fi
 
     # Paths to working directories
-    ns_install_path="$ns_prefix/install"
-    ns_build_path="$ns_prefix/build"
-    ns_cache_path="$ns_prefix/cache"
-    ns_input_path="$ns_prefix/input"
-    ns_config_path="$ns_prefix/config"
-    ns_benchmark_output="$ns_prefix/output/benchmark"
-    ns_validation_output="$ns_prefix/output/validation"
+    export ns_install_path="$ns_prefix/install"
+    export ns_build_path="$ns_prefix/build"
+    export ns_cache_path="$ns_prefix/cache"
+    export ns_input_path="$ns_prefix/input"
+    export ns_config_path="$ns_prefix/config"
+    export ns_bench_input_path="$ns_prefix/input/benchmarks"
+    export ns_bench_output="$ns_prefix/output/benchmark"
+    export ns_validation_output="$ns_prefix/output/validation"
 }
 
 # Sets up the default enviroment.
@@ -60,7 +61,7 @@ default_environment() {
 
     # Arbor specific
 
-    ns_arb_repo=https://github.com/arbor-sim/arbor.git
+    ns_arb_git_repo=https://github.com/arbor-sim/arbor.git
     ns_arb_branch=v0.2
 
     ns_arb_arch=native
@@ -112,18 +113,29 @@ default_hardware() {
 }
 
 run_with_mpi() {
-    echo ARB_NUM_THREADS=$ns_threads_per_socket mpirun -n $ns_sockets --map-by socket:PE=$ns_threads_per_socket $*
-    ARB_NUM_THREADS=$ns_threads_per_socket mpirun -n $ns_sockets --map-by socket:PE=$ns_threads_per_socket $*
+    if [ "$ns_with_mpi" = "ON" ]
+    then
+        echo ARB_NUM_THREADS=$ns_threads_per_socket mpirun -n $ns_sockets --map-by socket:PE=$ns_threads_per_socket $*
+        ARB_NUM_THREADS=$ns_threads_per_socket mpirun -n $ns_sockets --map-by socket:PE=$ns_threads_per_socket $*
+    else
+        echo ARB_NUM_THREADS=$ns_threads_per_socket  $*
+        ARB_NUM_THREADS=$ns_threads_per_socket  $*
+    fi
 }
 
 find_installed_paths() {
-    find "$ns_install_path" -type d -name "$1" -printf '%p:'
+    find "$ns_install_path" -type d -name "$1" | awk -v ORS=: '{print}'
 }
 
 # Save the environment used to build a simulation engine
 # to a shell script that can be used to reproduce that
 # environment for running the simulation engine.
-# arg 1:    name of the simulation engine, one of: {arb, nrn, corenrn}
+#
+# Record prefix to writable data (ns_prefix) and other
+# installation-time information, viz. ns_timestamp and
+# ns_sysname.
+# 
+# Takes one argument: name of the simulation engine, one of: {arb, nrn, corenrn}
 save_environment() {
     set_working_paths
     sim="$1"
@@ -138,11 +150,13 @@ save_environment() {
 
     source_env_script=
     if [ -n "$ns_environment" ]; then
-	source_env_script='source '$(full_path "$ns_environment")
+        source_env_script='source '$(full_path "$ns_environment")
     fi
 
     cat <<_end_ > "$ns_config_path/env_$sim.sh"
-ns_prefix="$ns_prefix"
+export ns_prefix="$ns_prefix"
+export ns_timestamp="$ns_timestamp"
+export ns_sysname="$ns_sysname"
 export PATH="$bin_path\${PATH}"
 export PYTHONPATH="$python_path\$PYTHONPATH"
 export PATH="$bin_path\$PATH"

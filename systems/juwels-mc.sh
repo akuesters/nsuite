@@ -1,5 +1,8 @@
 ### environment ###
 
+# record system name
+ns_sysname="juwels-mc"
+
 # set up environment for building on the multicore part of juwels
 
 module load CMake/3.13.0
@@ -14,6 +17,9 @@ module load netCDF/4.6.1-serial
 module load mpi4py/3.0.0-Python-3.6.6
 module load flex/2.6.4
 module load Bison/.3.1
+
+# for validation tests
+module load netCDF
 
 ### compilation options ###
 
