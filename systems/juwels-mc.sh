@@ -8,6 +8,7 @@ module load Python/3.6.6
 ns_python=$(which python3)
 
 module load GCC/8.2.0 ParaStationMPI/5.2.1-1
+module load netCDF/4.6.1-serial
 
 # for (core)neuron
 module load mpi4py/3.0.0-Python-3.6.6
