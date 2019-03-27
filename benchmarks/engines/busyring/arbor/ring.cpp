@@ -8,7 +8,7 @@
 #include <arbor/common_types.hpp>
 #include <arbor/context.hpp>
 #include <arbor/load_balance.hpp>
-#include <arbor/mc_cell.hpp>
+#include <arbor/cable_cell.hpp>
 #include <arbor/profile/meter_manager.hpp>
 #include <arbor/profile/profiler.hpp>
 #include <arbor/simple_sampler.hpp>
@@ -39,7 +39,7 @@ using arb::cell_probe_address;
 void write_trace_json(std::string fname, const arb::trace_data<double>& trace);
 
 // Generate a cell.
-arb::mc_cell branch_cell(arb::cell_gid_type gid, const cell_parameters& params);
+arb::cable_cell branch_cell(arb::cell_gid_type gid, const cell_parameters& params);
 
 class ring_tile: public arb::tile {
 public:
@@ -63,7 +63,7 @@ public:
     }
 
     cell_kind get_cell_kind(cell_gid_type gid) const override {
-        return cell_kind::cable1d_neuron;
+        return cell_kind::cable;
     }
 
     // Each cell has one spike detector (at the soma).
@@ -165,7 +165,7 @@ struct cell_stats {
             size_type nsegs_tmp = 0;
             size_type ncomp_tmp = 0;
             for (size_type i=b; i<e; ++i) {
-                auto c = arb::util::any_cast<arb::mc_cell>(r.get_cell_description(i));
+                auto c = arb::util::any_cast<arb::cable_cell>(r.get_cell_description(i));
                 nsegs_tmp += c.num_segments();
                 ncomp_tmp += c.num_compartments();
             }
@@ -176,7 +176,7 @@ struct cell_stats {
         if (!params.dryrun) {
             ncells = r.num_cells();
             for (size_type i = 0; i < ncells; ++i) {
-                auto c = arb::util::any_cast<arb::mc_cell>(r.get_cell_description(i));
+                auto c = arb::util::any_cast<arb::cable_cell>(r.get_cell_description(i));
                 nsegs += c.num_segments();
                 ncomp += c.num_compartments();
             }
@@ -189,7 +189,7 @@ struct cell_stats {
             size_type ncells_per_rank = ncells/nranks;
 
             for (size_type i = 0; i < ncells_per_rank; ++i) {
-                auto c = arb::util::any_cast<arb::mc_cell>(r.get_cell_description(i));
+                auto c = arb::util::any_cast<arb::cable_cell>(r.get_cell_description(i));
                 nsegs += c.num_segments();
                 ncomp += c.num_compartments();
             }
@@ -307,7 +307,7 @@ int main(int argc, char** argv) {
         if (root) {
             std::cout << "\n" << ns << " spikes generated at rate of "
                       << params.duration/ns << " ms between spikes\n";
-            std::ofstream fid(params.odir + "/arb_" + params.name + "_spikes.gdf");
+            std::ofstream fid(params.odir + "/" + params.name + "_spikes.gdf");
             if (!fid.good()) {
                 std::cerr << "Warning: unable to open file spikes.gdf for spike output\n";
             }
@@ -324,7 +324,7 @@ int main(int argc, char** argv) {
 
         // Write the samples to a json file samples were stored on this rank.
         if (voltage.size()>0u) {
-            std::string fname = params.odir + "/arb_" + params.name + "_voltages.json";
+            std::string fname = params.odir + "/" + params.name + "_voltages.json";
             write_trace_json(fname, voltage);
         }
 
@@ -370,8 +370,8 @@ double interp(const std::array<T,2>& r, unsigned i, unsigned n) {
     return r[0] + p*(r1-r0);
 }
 
-arb::mc_cell branch_cell(arb::cell_gid_type gid, const cell_parameters& params) {
-    arb::mc_cell cell;
+arb::cable_cell branch_cell(arb::cell_gid_type gid, const cell_parameters& params) {
+    arb::cable_cell cell;
 
     // Add soma.
     auto soma = cell.add_soma(12.6157/2.0); // For area of 500 μm².

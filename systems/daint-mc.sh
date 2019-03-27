@@ -1,10 +1,15 @@
 ### environment ###
 
+# record system name
+ns_sysname="daint-mc"
+
 # set up environment for building on the multicore part of daint
 
 [ "$PE_ENV" = "CRAY" ] && module swap PrgEnv-cray PrgEnv-gnu
 module load daint-mc
 module load CMake
+
+module load cray-hdf5 cray-netcdf
 
 # PyExtensions is needed for cython, mpi4py and others.
 # It loads cray-python/3.6.5.1
