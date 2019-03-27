@@ -78,6 +78,7 @@ ring_params read_options(int argc, char** argv) {
     param_from_json(params.min_delay, "min-delay", json);
     param_from_json(params.record_voltage, "record", json);
     param_from_json(params.dryrun, "dryrun", json);
+    param_from_json(params.odir, "odir", json);
     param_from_json(params.cell.max_depth, "depth", json);
     param_from_json(params.cell.branch_probs, "branch-probs", json);
     param_from_json(params.cell.compartments, "compartments", json);
