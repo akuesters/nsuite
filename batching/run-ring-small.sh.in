@@ -11,6 +11,6 @@
 #SBATCH --error="@RUNPATH@"/mpi-err.%j
 
 @ENVIRONMENTVARS@
-source "@TOPPATH@"/systems/juwels-mc-scorep.sh
+source "@TOPPATH@"/systems/juwels-mc.sh
 
 ARB_NUM_THREADS=@CPUSPERTASK@ srun "@EXECPATH@"/arbor-busyring "@RUNPATH@/@INPUT@.json" >"@RUNPATH@"/run.out
