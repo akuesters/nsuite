@@ -10,12 +10,7 @@
 #SBATCH --output="@RUNPATH@"/mpi-out.%j
 #SBATCH --error="@RUNPATH@"/mpi-err.%j
 
-if [ ! -z "${USE_SCOREP}" ]
-then
-  @ENVIRONMENTVARS@
-  source "@TOPPATH@"/systems/juwels-mc-scorep.sh
-else
-  source "@TOPPATH@"/systems/juwels-mc.sh
-fi
+@ENVIRONMENTVARS@
+source "@TOPPATH@"/systems/juwels-mc-scorep.sh
 
 ARB_NUM_THREADS=@CPUSPERTASK@ srun "@EXECPATH@"/arbor-busyring "@RUNPATH@/@INPUT@.json" >"@RUNPATH@"/run.out
