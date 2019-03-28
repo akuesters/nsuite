@@ -58,7 +58,7 @@ msg "ARBOR: build"
 make -j $ns_makej >> "$out" 2>&1
 [ $? != 0 ] && exit_on_error "see ${out}"
 
-msg "ARBOR: install
+msg "ARBOR: install"
 make install >> "$out" 2>&1
 [ $? != 0 ] && exit_on_error "see ${out}"
 
