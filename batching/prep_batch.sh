@@ -124,7 +124,7 @@ do-sed() {
         -e "s+@EXECPATH@+$execpath$scorep_path_suffix+g" \
         -e "s+@PARTITION@+$partition+g" \
         -e "s+@CPUSPERTASK@+$cpus_per_task+g" \
-        -e "s+@NTASKPERNODE@+$ranks_per_node+g" \
+        -e "s+@NTASKSPERNODE@+$ranks_per_node+g" \
         -e "s+@RANKS@+$ranks+g" \
         -e "s+@ENVIRONMENTVARS@+$environment_vars+g" \
         <"$1" >"$2"
