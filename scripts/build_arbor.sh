@@ -1,5 +1,7 @@
 arb_repo_path=$ns_build_path/arbor
 arb_build_path=$arb_repo_path/build
+arb_scorep_build_path=$arb_repo_path/build.scorep
+modcc_build_path=$arb_repo_path/build.modcc
 arb_checked_flag="${arb_repo_path}/checked_out"
 
 # clear log file from previous builds
@@ -29,6 +31,13 @@ fi
 
 # remove old build files
 mkdir -p "$arb_build_path"
+mkdir -p "$modcc_build_path"
+
+# build external modcc
+cd "$modcc_build_path"
+cmake .. -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++
+make -j $ns_makej modcc
+cd ..
 
 # configure the build with cmake
 cd "$arb_build_path"
@@ -37,6 +46,8 @@ cmake_args="$cmake_args -DARB_WITH_MPI=$ns_with_mpi"
 cmake_args="$cmake_args -DARB_WITH_GPU=$ns_arb_with_gpu"
 cmake_args="$cmake_args -DARB_ARCH=$ns_arb_arch"
 cmake_args="$cmake_args -DARB_VECTORIZE=$ns_arb_vectorize"
+cmake_args="$cmake_args -DARB_WITH_PROFILING=ON"
+cmake_args="$cmake_args -DARB_MODCC=${modcc_build_path}/bin/modcc"
 msg "ARBOR: cmake $cmake_args"
 cmake "$arb_repo_path" $cmake_args >> "$out" 2>&1
 [ $? != 0 ] && exit_on_error "see ${out}"
@@ -47,7 +58,7 @@ msg "ARBOR: build"
 make -j $ns_makej >> "$out" 2>&1
 [ $? != 0 ] && exit_on_error "see ${out}"
 
-msg "ARBOR: install"
+msg "ARBOR: install
 make install >> "$out" 2>&1
 [ $? != 0 ] && exit_on_error "see ${out}"
 
@@ -57,6 +68,43 @@ dst_path="$ns_install_path/bin"
 msg "ARBOR: library build completed"
 cd $ns_base_path
 
+if [ ! -z "${USE_SCOREP}" ]
+then
+  # use a different install path for the Score-P instrumented library
+  ns_scorep_install_path="$ns_base_path/install.scorep"
+
+  # configure the build with cmake
+  mkdir -p "$arb_scorep_build_path"
+  cd "$arb_scorep_build_path"
+  cmake_args=-DCMAKE_INSTALL_PREFIX:PATH="$ns_scorep_install_path"
+  cmake_args="$cmake_args -DARB_WITH_MPI=$ns_with_mpi"
+  cmake_args="$cmake_args -DARB_WITH_GPU=$ns_arb_with_gpu"
+  cmake_args="$cmake_args -DARB_ARCH=$ns_arb_arch"
+  cmake_args="$cmake_args -DARB_VECTORIZE=$ns_arb_vectorize"
+  cmake_args="$cmake_args -DARB_WITH_PROFILING=ON"
+  cmake_args="$cmake_args -DARB_MODCC=${modcc_build_path}/bin/modcc"
+  msg "ARBOR with Score-P: cmake $cmake_args"
+  cmake "$arb_repo_path" -DCMAKE_C_COMPILER=scorep-mpicc -DCMAKE_CXX_COMPILER=scorep-mpicxx $cmake_args >> "$out" 2>&1
+  SCOREP_WRAPPER=off cmake . -DCMAKE_C_COMPILER=scorep-mpicc -DCMAKE_CXX_COMPILER=scorep-mpicxx $cmake_args >> "$out" 2>&1
+  [ $? != 0 ] && exit_on_error "see ${out}"
+
+  cd "$arb_scorep_build_path"
+
+  msg "ARBOR with Score-P: build"
+  make -j $ns_makej SCOREP_WRAPPER_INSTRUMENTER_FLAGS="--user  --thread=pthread --verbose --keep-files" >> "$out" 2>&1
+  [ $? != 0 ] && exit_on_error "see ${out}"
+
+  msg "ARBOR with Score-P: install"
+  make install >> "$out" 2>&1
+  [ $? != 0 ] && exit_on_error "see ${out}"
+
+  src_path="$arb_scorep_build_path/bin"
+  dst_path="$ns_install_path/bin.scorep"
+
+  msg "ARBOR with Score-P: library build completed"
+  cd $ns_base_path
+fi
+
 # Required for the CMake scripts that build the benchmarks to
 # find the Arbor library that was built and installed above.
 export CMAKE_PREFIX_PATH="$ns_install_path"
@@ -65,6 +113,9 @@ benchmarks="busyring"
 
 for bench in $benchmarks
 do
+    # Required for the CMake scripts that build the benchmarks to
+    # find the Arbor library that was built and installed above.
+    export CMAKE_PREFIX_PATH="$ns_install_path"
     echo
     msg "ARBOR: $bench benchmark"
     source_path="${ns_base_path}/benchmarks/engines/${bench}/arbor"
@@ -73,7 +124,9 @@ do
     cd "$build_path"
 
     msg "ARBOR: cmake"
-    cmake "$source_path" -DCMAKE_INSTALL_PREFIX:PATH="$ns_install_path" >> "$out" 2>&1
+    # Set install path to the source path.
+    # This will install the "run" executable in the source path.
+    cmake "$source_path" -DARB_MODCC=${modcc_build_path}/bin/modcc -DCMAKE_INSTALL_PREFIX:PATH="$source_path" >> "$out" 2>&1
     [ $? != 0 ] && exit_on_error "see ${out}"
 
     msg "ARBOR: make"
@@ -83,6 +136,34 @@ do
     msg "ARBOR: install"
     make install >> "$out" 2>&1
     [ $? != 0 ] && exit_on_error "see ${out}"
+
+    if [ ! -z "${USE_SCOREP}" ]
+    then
+      # Required for the CMake scripts that build the benchmarks to
+      # find the Arbor library that was built and installed above.
+      export CMAKE_PREFIX_PATH="$ns_scorep_install_path"
+      echo
+      msg "ARBOR with Score-P: $bench benchmark"
+      source_path="${ns_base_path}/benchmarks/engines/${bench}/arbor"
+      build_path="${ns_build_path}/${bench}_arbor_scorep"
+      mkdir -p "$build_path"
+      cd "$build_path"
+
+      msg "ARBOR with Score-P: cmake"
+      # Set install path to the source path.
+      # This will install the executable in the source path.
+      cmake "$source_path" -DARB_MODCC=${modcc_build_path}/bin/modcc -DCMAKE_C_COMPILER=scorep-mpicc -DCMAKE_CXX_COMPILER=scorep-mpicxx -DCMAKE_INSTALL_PREFIX:PATH="$source_path/scorep" >> "$out" 2>&1
+      SCOREP_WRAPPER=off cmake "$source_path" -DCMAKE_C_COMPILER=scorep-mpicc -DCMAKE_CXX_COMPILER=scorep-mpicxx -DCMAKE_INSTALL_PREFIX:PATH="$source_path/scorep" >> "$out" 2>&1
+      [ $? != 0 ] && exit_on_error "see ${out}"
+
+      msg "ARBOR with Score-P: make"
+      make -j $ns_makej SCOREP_WRAPPER_INSTRUMENTER_FLAGS="--user --thread=pthread --verbose --keep-files" >> "$out" 2>&1
+      [ $? != 0 ] && exit_on_error "see ${out}"
+
+      msg "ARBOR with Score-P: install"
+      make install >> "$out" 2>&1
+      [ $? != 0 ] && exit_on_error "see ${out}"
+    fi
 done
 
 cd $ns_base_path

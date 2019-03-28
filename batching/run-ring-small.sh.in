@@ -1,12 +1,21 @@
 #!/bin/bash -x
 #SBATCH --account=slns
 #SBATCH --time=@TIMELIMIT@
-#SBATCH --reservation=@RESERVATION@
+##SBATCH --reservation=@RESERVATION@
+#SBATCH --partition=@PARTITION@
 #SBATCH --nodes=@REALNODES@
 #SBATCH --ntasks=@REALRANKS@
+#SBATCH --cpus-per-task=@CPUSPERTASK@
+#SBATCH --ntasks-per-node=@NTASKSPERNODE@
 #SBATCH --output="@RUNPATH@"/mpi-out.%j
 #SBATCH --error="@RUNPATH@"/mpi-err.%j
 
-source "@TOPPATH@"/systems/juwels-mc.sh
+if [ ! -z "${USE_SCOREP}" ]
+then
+  @ENVIRONMENTVARS@
+  source "@TOPPATH@"/systems/juwels-mc-scorep.sh
+else
+  source "@TOPPATH@"/systems/juwels-mc.sh
+fi
 
 ARB_NUM_THREADS=@CPUSPERTASK@ srun "@EXECPATH@"/arbor-busyring "@RUNPATH@/@INPUT@.json" >"@RUNPATH@"/run.out

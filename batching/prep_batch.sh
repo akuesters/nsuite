@@ -33,17 +33,45 @@ timelimit=2:30:00
 
 toppath=$(readlink -f "$(pwd)"/..)
 execpath="$toppath"/benchmarks/engines/busyring/arbor
-reservation=osws_wed_pm_large
+#reservation=osws_wed_pm_large
+partition=batch
 
+# options: false, profiling, papi, tracing
+scorep=false
+scorep_path_suffix=""
+
+environment_vars=""
 ###########################
+
+# score-p settings
+scorep_settings() {
+   case $scorep in
+     profiling)
+       # pure profiling
+       scorep_vars="export SCOREP_EXPERIMENT_DIRECTORY=scorep-$model-sum"
+       scorep_path_suffix="/scorep"
+       ;;
+     papi)
+       # profiling with PAPI counters
+       scorep_vars="export SCOREP_EXPERIMENT_DIRECTORY=scorep-$model-sum_papi"
+       scorep_vars="${scorep_vars}\nexport SCOREP_METRIC_PAPI=PAPI_TOT_INS,PAPI_TOT_CYC,PAPI_RES_STL"
+       scorep_path_suffix="/scorep"
+       ;;
+     tracing)
+       # tracing
+       scorep_vars="export SCOREP_EXPERIMENT_DIRECTORY=scorep-$model-trace"
+       scorep_vars="${scorep_vars}\nexport SCOREP_ENABLE_TRACING=true"
+       scorep_vars="${scorep_vars}\nexport SCOREP_ENABLE_PROFILING=false"
+       # size may have to be adapted to use case
+       scorep_vars="${scorep_vars}\nexport SCOREP_TOTAL_MEMORY=650M"
+       scorep_path_suffix="/scorep"
+       ;;
+   esac
+   environment_vars="${environment_vars}\n${scorep_vars}"
+}
 
 append() {
     eval "$1[\${#$1[@]}]=\$2"
-    #if [ -n $1 ]; then
-    #    local var=$1; shift
-    #fi
-    #local val=$1
-    #var[${#var[@]}]=$val
 }
 
 build-sets() {
@@ -94,10 +122,13 @@ do-sed() {
         -e "s+@DRYRUN@+$dryrun+g" \
         -e "s+@RUNPATH@+$runpath+g" \
         -e "s+@INPUT@+$input+g" \
-        -e "s+@EXECPATH@+$execpath+g" \
-        -e "s+@RESERVATION@+$reservation+g" \
+        -e "s+@EXECPATH@+$execpath$scorep_path_suffix+g" \
+#        -e "s+@RESERVATION@+$reservation+g" \
+        -e "s+@PARTITION@+$partition+g" \
         -e "s+@CPUSPERTASK@+$cpus_per_task+g" \
+        -e "s+@NTASKPERNODE@+$ranks_per_node+g" \
         -e "s+@RANKS@+$ranks+g" \
+        -e "s+@ENVIRONMENTVARS@+$environment_vars+g" \
         <"$1" >"$2"
 }
 
