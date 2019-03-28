@@ -33,7 +33,6 @@ timelimit=2:30:00
 
 toppath=$(readlink -f "$(pwd)"/..)
 execpath="$toppath"/benchmarks/engines/busyring/arbor
-#reservation=osws_wed_pm_large
 partition=batch
 
 # options: false, profiling, papi, tracing
@@ -105,7 +104,7 @@ eval-cmdline() {
     done
     
     output_path="$toppath"/batching/batch-benchmarks/$tag/$model/$config/$dryrun
-    
+    scorep_settings
     cmdline/$mode # setup for mode
 }
 
@@ -123,7 +122,6 @@ do-sed() {
         -e "s+@RUNPATH@+$runpath+g" \
         -e "s+@INPUT@+$input+g" \
         -e "s+@EXECPATH@+$execpath$scorep_path_suffix+g" \
-#        -e "s+@RESERVATION@+$reservation+g" \
         -e "s+@PARTITION@+$partition+g" \
         -e "s+@CPUSPERTASK@+$cpus_per_task+g" \
         -e "s+@NTASKPERNODE@+$ranks_per_node+g" \
