@@ -67,7 +67,7 @@ scorep_settings() {
        scorep_vars="${scorep_vars}\nexport SCOREP_ENABLE_PROFILING=false"
        # size may have to be adapted to use case
        scorep_vars="${scorep_vars}\nexport SCOREP_TOTAL_MEMORY=650M"
-       scorep_vars="${scorep_vars}\nif [ -f ../../../../../../profiling/${model}/${config}/${dryrun}/cells-${cells}/ranks-${ranks}/scorep-${model}-sum/profile.cubex ]"
+       scorep_vars="${scorep_vars}\nif [ -f ../../../../../../profiling/${model}/${config}/${dryrun}/cells-${cells_per_rank}/ranks-${ranks}/scorep-${model}-sum/profile.cubex ]"
        scorep_vars="${scorep_vars}\nthen"
        scorep_vars="${scorep_vars}\n export SCOREP_TOTAL_MEMORY=\$(scorep-score ../../../../../../profiling/${model}/${config}/${dryrun}/cells-${cells_per_rank}/ranks-${ranks}/scorep-${model}-sum/profile.cubex  | grep \"^Estimated memory requirements\" | awk '{print $NF}')"
        scorep_vars="${scorep_vars}\nfi"

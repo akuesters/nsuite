@@ -328,9 +328,6 @@ int main(int argc, char** argv) {
             write_trace_json(fname, voltage);
         }
 
-        auto profile = arb::profile::profiler_summary();
-        if (root) std::cout << profile << "\n";
-
         auto report = arb::profile::make_meter_report(meters, context);
         if (root) std::cout << report;
     }

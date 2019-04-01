@@ -46,7 +46,6 @@ cmake_args="$cmake_args -DARB_WITH_MPI=$ns_with_mpi"
 cmake_args="$cmake_args -DARB_WITH_GPU=$ns_arb_with_gpu"
 cmake_args="$cmake_args -DARB_ARCH=$ns_arb_arch"
 cmake_args="$cmake_args -DARB_VECTORIZE=$ns_arb_vectorize"
-cmake_args="$cmake_args -DARB_WITH_PROFILING=ON"
 cmake_args="$cmake_args -DARB_MODCC=${modcc_build_path}/bin/modcc"
 msg "ARBOR: cmake $cmake_args"
 cmake "$arb_repo_path" $cmake_args >> "$out" 2>&1
@@ -81,7 +80,6 @@ then
   cmake_args="$cmake_args -DARB_WITH_GPU=$ns_arb_with_gpu"
   cmake_args="$cmake_args -DARB_ARCH=$ns_arb_arch"
   cmake_args="$cmake_args -DARB_VECTORIZE=$ns_arb_vectorize"
-  cmake_args="$cmake_args -DARB_WITH_PROFILING=ON"
   cmake_args="$cmake_args -DARB_MODCC=${modcc_build_path}/bin/modcc"
   msg "ARBOR with Score-P: cmake $cmake_args"
   cmake "$arb_repo_path" -DCMAKE_C_COMPILER=scorep-mpicc -DCMAKE_CXX_COMPILER=scorep-mpicxx $cmake_args >> "$out" 2>&1
