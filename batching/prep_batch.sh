@@ -37,7 +37,7 @@ partition=batch
 
 # options: false, profiling, papi, tracing
 scorep=false
-scorep_path_suffix=""
+scorep_path_suffix="/bin"
 
 environment_vars=""
 ###########################
@@ -48,13 +48,13 @@ scorep_settings() {
      profiling)
        # pure profiling
        scorep_vars="export SCOREP_EXPERIMENT_DIRECTORY=scorep-$model-sum"
-       scorep_path_suffix="/scorep"
+       scorep_path_suffix="/scorep/bin"
        ;;
      papi)
        # profiling with PAPI counters
        scorep_vars="export SCOREP_EXPERIMENT_DIRECTORY=scorep-$model-sum_papi"
        scorep_vars="${scorep_vars}\nexport SCOREP_METRIC_PAPI=PAPI_TOT_INS,PAPI_TOT_CYC,PAPI_RES_STL"
-       scorep_path_suffix="/scorep"
+       scorep_path_suffix="/scorep/bin"
        ;;
      tracing)
        # tracing
@@ -63,7 +63,7 @@ scorep_settings() {
        scorep_vars="${scorep_vars}\nexport SCOREP_ENABLE_PROFILING=false"
        # size may have to be adapted to use case
        scorep_vars="${scorep_vars}\nexport SCOREP_TOTAL_MEMORY=650M"
-       scorep_path_suffix="/scorep"
+       scorep_path_suffix="/scorep/bin"
        ;;
    esac
    environment_vars="${environment_vars}\n${scorep_vars}"
