@@ -9,7 +9,8 @@
 #SBATCH --output="@RUNPATH@"/mpi-out.%j
 #SBATCH --error="@RUNPATH@"/mpi-err.%j
 
+source "@TOPPATH@"/systems/juwels-mc@SCOREPMODULE@.sh
+
 @ENVIRONMENTVARS@
-source "@TOPPATH@"/systems/juwels-mc.sh
 
 ARB_NUM_THREADS=@CPUSPERTASK@ srun "@EXECPATH@"/arbor-busyring "@RUNPATH@/@INPUT@.json" >"@RUNPATH@"/run.out

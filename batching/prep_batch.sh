@@ -48,13 +48,17 @@ scorep_settings() {
      profiling)
        # pure profiling
        scorep_vars="export SCOREP_EXPERIMENT_DIRECTORY=scorep-$model-sum"
+       scorep_vars="${scorep_vars}\nexport SCOREP_TOTAL_MEMORY=100M"
        scorep_path_suffix="/scorep/bin"
+       scorep_module="-scorep"
        ;;
      papi)
        # profiling with PAPI counters
        scorep_vars="export SCOREP_EXPERIMENT_DIRECTORY=scorep-$model-sum_papi"
        scorep_vars="${scorep_vars}\nexport SCOREP_METRIC_PAPI=PAPI_TOT_INS,PAPI_TOT_CYC,PAPI_RES_STL"
+       scorep_vars="${scorep_vars}\nexport SCOREP_TOTAL_MEMORY=100M"
        scorep_path_suffix="/scorep/bin"
+       scorep_module="-scorep"
        ;;
      tracing)
        # tracing
@@ -63,7 +67,12 @@ scorep_settings() {
        scorep_vars="${scorep_vars}\nexport SCOREP_ENABLE_PROFILING=false"
        # size may have to be adapted to use case
        scorep_vars="${scorep_vars}\nexport SCOREP_TOTAL_MEMORY=650M"
+       scorep_vars="${scorep_vars}\nif [ -f ../../../../../../profiling/${model}/${config}/${dryrun}/cells-${cells}/ranks-${ranks}/scorep-${model}-sum/profile.cubex ]"
+       scorep_vars="${scorep_vars}\nthen"
+       scorep_vars="${scorep_vars}\n export SCOREP_TOTAL_MEMORY=\$(scorep-score ../../../../../../profiling/${model}/${config}/${dryrun}/cells-${cells_per_rank}/ranks-${ranks}/scorep-${model}-sum/profile.cubex  | grep \"^Estimated memory requirements\" | awk '{print $NF}')"
+       scorep_vars="${scorep_vars}\nfi"
        scorep_path_suffix="/scorep/bin"
+       scorep_module="-scorep"
        ;;
    esac
    environment_vars="${environment_vars}\n${scorep_vars}"
@@ -104,7 +113,6 @@ eval-cmdline() {
     done
     
     output_path="$toppath"/batching/batch-benchmarks/$tag/$model/$config/$dryrun
-    scorep_settings
     cmdline/$mode # setup for mode
 }
 
@@ -127,6 +135,7 @@ do-sed() {
         -e "s+@NTASKSPERNODE@+$ranks_per_node+g" \
         -e "s+@RANKS@+$ranks+g" \
         -e "s+@ENVIRONMENTVARS@+$environment_vars+g" \
+        -e "s+@SCOREPMODULE@+$scorep_module+g" \
         <"$1" >"$2"
 }
 
@@ -177,6 +186,7 @@ over-nodes() {
         local cells=$(( cells_per_ranks * ranks ))
         local runpath="$cell_output_path/ranks-$ranks"
         local input="run-$model-$config"
+        scorep_settings
 
         job/$mode
     done
