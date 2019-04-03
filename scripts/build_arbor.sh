@@ -2,6 +2,7 @@ arb_repo_path=$ns_build_path/arbor
 arb_build_path=$arb_repo_path/build
 arb_scorep_build_path=$arb_repo_path/build.scorep
 modcc_build_path=$arb_repo_path/build.modcc
+arb_scorep_filter_path=`pwd`
 arb_checked_flag="${arb_repo_path}/checked_out"
 
 # clear log file from previous builds
@@ -89,7 +90,7 @@ then
   cd "$arb_scorep_build_path"
 
   msg "ARBOR with Score-P: build"
-  make -j $ns_makej SCOREP_WRAPPER_INSTRUMENTER_FLAGS="--user  --thread=pthread --verbose --keep-files" >> "$out" 2>&1
+  make -j $ns_makej SCOREP_WRAPPER_INSTRUMENTER_FLAGS="--user  --thread=pthread --verbose --keep-files --instrument-filter=${arb_scorep_filter_path}/filter.arbor" >> "$out" 2>&1
   [ $? != 0 ] && exit_on_error "see ${out}"
 
   msg "ARBOR with Score-P: install"
@@ -155,7 +156,7 @@ do
       [ $? != 0 ] && exit_on_error "see ${out}"
 
       msg "ARBOR with Score-P: make"
-      make -j $ns_makej SCOREP_WRAPPER_INSTRUMENTER_FLAGS="--user --thread=pthread --verbose --keep-files" >> "$out" 2>&1
+      make -j $ns_makej SCOREP_WRAPPER_INSTRUMENTER_FLAGS="--user --thread=pthread --verbose --keep-files --instrument-filter=${arb_scorep_filter_path}/filter.arbor" >> "$out" 2>&1
       [ $? != 0 ] && exit_on_error "see ${out}"
 
       msg "ARBOR with Score-P: install"
