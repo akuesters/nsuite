@@ -2,7 +2,7 @@ arb_repo_path=$ns_build_path/arbor
 arb_build_path=$arb_repo_path/build
 arb_scorep_build_path=$arb_repo_path/build.scorep
 modcc_build_path=$arb_repo_path/build.modcc
-arb_scorep_filter_path=`pwd`
+arb_scorep_filter_path=$ns_base_path/scripts
 arb_checked_flag="${arb_repo_path}/checked_out"
 
 # clear log file from previous builds
