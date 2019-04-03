@@ -167,7 +167,7 @@ job/table() {
     local first_line_ranks=$(( ranks_per_node * nodes_min ))
     local first_line_cells=$(( ranks_per_node * cells_per_rank_sets[0] ))
     if [[ $cells == $first_line_cells && $ranks == $first_line_ranks ]]; then
-        echo "tag        model    config    dryrun    cells    ranks    cells    compartments    wall(s)   throughput    mem-tot(MB)    mem-percell(MB)    comm_exch_gather(s)    walkspikes(s)" >> "$output_path/table.txt"
+        echo "tag        model    config    dryrun    cells    ranks    cells    compartments    wall(s)   throughput    mem-tot(MB)    mem-percell(MB)    ref-time(s)    overhead(%)" >> "$output_path/table.txt"
     fi
 
     table_line "$runpath"/run.out $cells $ranks \
@@ -222,18 +222,23 @@ table_line() {
         if [ "$mempos" != "-1" ]
         then
             local rankmem=$(awk "/^meter-total/ {print \$$mempos}" $fid)
-            local totalmem=`echo $rankmem*$nranks | bc -l`
-            local cellmem=`echo $totalmem/$ncell | bc -l`
+            local totalmem=`echo "$rankmem*$nranks" | bc -l`
+            local cellmem=`echo "$totalmem/$ncell" | bc -l`
             printf "%12.3f%12.3f" $totalmem $cellmem
         else
             printf "%12s%12s" '-' '-'
         fi
 
-        local comm_exch_gather=`awk '/gather/ {print $4}' $fid`
-        local walkspikes=`awk '/walkspikes/ {print $4}' $fid`
+        fid_ref=../../../../../../default/${model}/${config}/${dryrun}/cells-${cells_per_rank}/ranks-${ranks}/run.out
 
-        printf "%12.3f %12.3f" $comm_exch_gather $walkspikes
-
+        if [ ! -f "$fid_ref" ]; then
+            echo "ERROR: the reference output file \"$fid_ref\" does not exist."
+            printf "%12s%12s" '-' '-'
+        else
+            local ref_time=`awk '/^model-run/ {print $2}' $fid_ref`
+            local overhead=`echo "((${tts}/${ref_time})-1)*100" | bc -l`
+            printf "%12.3f %12.3f" $ref_time $overhead
+        fi
         printf "\n"
     fi
 }
