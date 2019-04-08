@@ -1,5 +1,8 @@
 SCOREP_REGION_NAMES_BEGIN
  EXCLUDE
+ auto?arb::split_sorted_range(Seq&&,?const?Value&,?Less)?*with?Seq?=?arb::util::range<const?arb::spike_event*>&;?Value?=?float;?Less?=?arb::event_time_less*
+ AssignableContainer&?arb::util::assign(AssignableContainer&,?const?Seq&)?*with?AssignableContainer?=?std::vector<float>;?Seq?=?arb::util::range<arb::util::transform_iterator<__gnu_cxx::__normal_iterator<const?arb::deliverable_event*,?std::vector<arb::deliverable_event,?std::allocator<arb::deliverable_event>?>?>,?arb::multicore::multi_event_stream<Event>::init(std::vector<Event>)?*with?Event?=?arb::deliverable_event*::<lambda(const?arb::deliverable_event&)>?>,?arb::util::transform_iterator<__gnu_cxx::__normal_iterator<const?arb::deliverable_event*,?std::vector<arb::deliverable_event,?std::allocator<arb::deliverable_event>?>?>,?arb::multicore::multi_event_stream<Event>::init(std::vector<Event>)?*with?Event?=?arb::deliverable_event*::<lambda(const?arb::deliverable_event&)>?>?>*
+ arb::util::range<U,?V>?arb::util::make_range(const?U&,?const?V&)?*with?U?=?__gnu_cxx::__normal_iterator<arb::{anonymous}::cv_param*,?std::vector<arb::{anonymous}::cv_param>?>;?V?=?__gnu_cxx::__normal_iterator<arb::{anonymous}::cv_param*,?std::vector<arb::{anonymous}::cv_param>?>*
  void?arb::mechanism_cpu_expsyn::net_receive(int,?arb::multicore::mechanism::value_type)
  arb::time_type?arb::event_binner::bin(arb::time_type,?arb::time_type)
  auto?arb::event_time(const?Event&)?*with?Event?=?arb::deliverable_event*
