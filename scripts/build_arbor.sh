@@ -35,9 +35,10 @@ if [ "$ns_arb_modcc" == "ON" ]; then
     mkdir -p "$modcc_build_path"
 
     # build external modcc
+    msg "ARBOR: build modcc"
     cd "$modcc_build_path"
-    cmake .. -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++
-    make -j $ns_makej modcc
+    cmake .. -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ >> "$out" 2>&1
+    make -j $ns_makej modcc >> "$out" 2>&1
     cd ..
 fi
 

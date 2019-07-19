@@ -16,12 +16,12 @@ module load CUDA/9.2.88
 
 module load Python/3.6.6
 module load SciPy-Stack/2018b-Python-3.6.6
-ns_python=python3
+ns_python=$(which python3)
 
 # modules for (core)neuron
 module load mpi4py/3.0.0-Python-3.6.6
 module load flex/2.6.4
-module load Bison/.3.1
+#module load Bison/.3.1
 
 # for validation tests
 module load netCDF/4.6.1
@@ -31,6 +31,7 @@ ns_cc=$(which mpicc)
 ns_cxx=$(which mpicxx)
 ns_with_mpi=ON
 ns_arb_with_gpu=ON
+
 ns_arb_arch=haswell
 
 ns_arb_branch=master
@@ -46,6 +47,8 @@ ns_threads_per_socket=24
 
 # activate budget via jutil env activate -p <cproject> -A <budget> before running the benchmark
 run_with_mpi() {
-    echo ARB_NUM_THREADS=$ns_threads_per_socket srun -n $ns_sockets -N $ns_sockets -c $ns_threads_per_socket "${@}" 
-    ARB_NUM_THREADS=$ns_threads_per_socket srun -n $ns_sockets -N $ns_sockets -c $ns_threads_per_socket "${@}" 
+    export ARB_NUM_THREADS=$ns_threads_per_socket
+    export OMP_NUM_THREADS=$ns_threads_per_socket
+    echo srun -n$ns_sockets -N1 -c$ns_threads_per_socket "${@}" 
+    srun -n$ns_sockets -N1 -c$ns_threads_per_socket "${@}" 
 }
